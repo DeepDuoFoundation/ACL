@@ -9,6 +9,7 @@ describe("PDKManager", () => {
     const pdkList = manager.listAvailable();
     expect(pdkList).toContain("TSMC N3E");
     expect(pdkList).toContain("Samsung SF3");
+    expect(pdkList).toContain("Intel 18A");
   });
 
   it("should load TSMC N3E PDK", () => {
@@ -81,11 +82,11 @@ describe("PDKManager", () => {
 
   it("should load Intel 18A PDK", () => {
     const manager = new PDKManager();
-    const config = manager.loadPDK("intel-18a");
+    const config = manager.loadPDK("Intel 18A");
     expect(config.node).toBe("18A");
     expect(config.vendor).toBe("Intel Foundry");
     expect(config.illumination.na).toBe(0.55);
     expect(config.layers.length).toBeGreaterThanOrEqual(4);
-    expect(manager.listAvailable()).toContain("intel-18a");
+    expect(manager.listAvailable()).toContain("Intel 18A");
   });
 });
