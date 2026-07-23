@@ -1,9 +1,23 @@
 export class VectorStore {
     documents = [];
-    async add(doc) {
-        this.documents.push(doc);
+    dbPath;
+    tableName;
+    constructor(config = {}) {
+        this.dbPath = config.dbPath || "./.lancedb";
+        this.tableName = config.tableName || "litho_rag";
     }
-    async search(queryVector, topK) {
+    async add(doc) {
+        const existingIdx = this.documents.findIndex((d) => d.id === doc.id);
+        if (existingIdx >= 0) {
+            this.documents[existingIdx] = doc;
+        }
+        else {
+            this.documents.push(doc);
+        }
+    }
+    async search(queryVector, topK = 5) {
+        if (this.documents.length === 0)
+            return [];
         return this.documents
             .map((doc) => ({
             ...doc,
@@ -13,13 +27,16 @@ export class VectorStore {
             .slice(0, topK);
     }
     cosineSimilarity(a, b) {
+        if (!a.length || !b.length || a.length !== b.length)
+            return 0;
         let dot = 0, normA = 0, normB = 0;
         for (let i = 0; i < a.length; i++) {
             dot += a[i] * b[i];
             normA += a[i] * a[i];
             normB += b[i] * b[i];
         }
-        return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+        const denom = Math.sqrt(normA) * Math.sqrt(normB);
+        return denom === 0 ? 0 : dot / denom;
     }
 }
 //# sourceMappingURL=vector-store.js.map

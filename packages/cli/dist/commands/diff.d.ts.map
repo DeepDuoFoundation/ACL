@@ -1,1 +1,1 @@
-{"version":3,"file":"diff.d.ts","sourceRoot":"","sources":["../../src/commands/diff.ts"],"names":[],"mappings":"AAAA,wBAAsB,WAAW,kBAGhC"}
+{"version":3,"file":"diff.d.ts","sourceRoot":"","sources":["../../src/commands/diff.ts"],"names":[],"mappings":"AAAA,MAAM,WAAW,UAAU;IACzB,KAAK,EAAE,MAAM,CAAC;IACd,MAAM,EAAE,MAAM,CAAC;IACf,UAAU,EAAE,MAAM,CAAC;IACnB,YAAY,EAAE,MAAM,CAAC;IACrB,cAAc,EAAE,MAAM,CAAC;IACvB,UAAU,EAAE,MAAM,CAAC;CACpB;AAED,wBAAgB,WAAW,CAAC,IAAI,EAAE,UAAU,EAAE,IAAI,EAAE,UAAU,GAAG,MAAM,CAyBtE;AAED,wBAAsB,WAAW,CAAC,MAAM,CAAC,EAAE,MAAM,EAAE,MAAM,CAAC,EAAE,MAAM,iBAoBjE"}

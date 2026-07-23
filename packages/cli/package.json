@@ -13,6 +13,7 @@
     "@litho/shared": "workspace:*",
     "@litho/rag": "workspace:*",
     "@litho/capability": "workspace:*",
+    "@litho/security": "workspace:*",
     "commander": "^12.1.0"
   },
   "devDependencies": {

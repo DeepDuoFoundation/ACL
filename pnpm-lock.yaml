@@ -8,6 +8,37 @@ importers:
 
   .: {}
 
+  packages/api:
+    dependencies:
+      '@litho/capability':
+        specifier: workspace:*
+        version: link:../capability
+      '@litho/core':
+        specifier: workspace:*
+        version: link:../core
+      '@litho/pdk':
+        specifier: workspace:*
+        version: link:../pdk
+      '@litho/rca-agent':
+        specifier: workspace:*
+        version: link:../rca-agent
+      '@litho/reporting':
+        specifier: workspace:*
+        version: link:../reporting
+      '@litho/security':
+        specifier: workspace:*
+        version: link:../security
+      '@litho/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.6
+        version: 3.2.7(@types/node@22.20.1)
+
   packages/capability:
     devDependencies:
       typescript:
@@ -28,6 +59,9 @@ importers:
       '@litho/rag':
         specifier: workspace:*
         version: link:../rag
+      '@litho/security':
+        specifier: workspace:*
+        version: link:../security
       '@litho/shared':
         specifier: workspace:*
         version: link:../shared
@@ -147,9 +181,15 @@ importers:
 
   packages/jetbrains:
     dependencies:
+      '@litho/capability':
+        specifier: workspace:*
+        version: link:../capability
       '@litho/core':
         specifier: workspace:*
         version: link:../core
+      '@litho/security':
+        specifier: workspace:*
+        version: link:../security
       '@litho/shared':
         specifier: workspace:*
         version: link:../shared
@@ -312,6 +352,19 @@ importers:
         specifier: ^3.2.6
         version: 3.2.7(@types/node@22.20.1)
 
+  packages/security:
+    dependencies:
+      '@litho/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      typescript:
+        specifier: ^5.8.3
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.6
+        version: 3.2.7(@types/node@22.20.1)
+
   packages/self-learning:
     dependencies:
       '@litho/shared':
@@ -345,9 +398,15 @@ importers:
 
   packages/vscode:
     dependencies:
+      '@litho/capability':
+        specifier: workspace:*
+        version: link:../capability
       '@litho/core':
         specifier: workspace:*
         version: link:../core
+      '@litho/security':
+        specifier: workspace:*
+        version: link:../security
       '@litho/shared':
         specifier: workspace:*
         version: link:../shared

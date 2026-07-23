@@ -22,7 +22,20 @@ export class PDKManager {
   }
 
   loadPDK(name: string): PDKConfig {
-    const config = this.pdkConfigs.get(name);
+    let config = this.pdkConfigs.get(name);
+
+    if (!config) {
+      // Try normalized slug lookup
+      const targetSlug = name.toLowerCase().replace(/[^a-z0-9]/g, "");
+      for (const [key, val] of this.pdkConfigs.entries()) {
+        const keySlug = key.toLowerCase().replace(/[^a-z0-9]/g, "");
+        if (keySlug === targetSlug) {
+          config = val;
+          break;
+        }
+      }
+    }
+
     if (!config) {
       throw new Error(`PDK not found: ${name}. Available: ${Array.from(this.pdkConfigs.keys()).join(", ")}`);
     }

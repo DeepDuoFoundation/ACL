@@ -79,6 +79,7 @@ export class LLMClient {
     buildHeaders() {
         const headers = {
             "Content-Type": "application/json",
+            "X-DDF-Product": "agentic-lithography",
         };
         if (this.endpoint.apiKey) {
             if (this.endpoint.compat === "anthropic-oc") {

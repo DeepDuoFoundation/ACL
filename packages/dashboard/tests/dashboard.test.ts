@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { DashboardAPI } from "../src/api.js";
 import { EPEHeatmap } from "../src/heatmap.js";
 import { JobStatusTracker } from "../src/tracker.js";
+import { AppRouterRegistry } from "../src/app-router.js";
 import type { DashboardConfig, EPEData, JobStatus } from "../src/types.js";
 
 const testConfig: DashboardConfig = {
@@ -135,5 +136,16 @@ describe("DashboardAPI", () => {
     const metrics = await api.getMetrics();
     expect(metrics.totalJobs).toBe(1);
     expect(metrics.activeAgents).toBe(1);
+  });
+});
+
+describe("AppRouterRegistry", () => {
+  it("registers and retrieves dashboard routes", () => {
+    const registry = new AppRouterRegistry();
+    const routes = registry.getRoutes();
+
+    expect(routes.length).toBe(6);
+    expect(registry.getRouteByPath("/epe")?.componentName).toBe("EPEViewer");
+    expect(registry.getRouteByPath("/hitl")?.componentName).toBe("HITLApprovalQueue");
   });
 });

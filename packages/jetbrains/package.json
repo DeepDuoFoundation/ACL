@@ -10,6 +10,8 @@
   "dependencies": {
     "@litho/core": "workspace:*",
     "@litho/shared": "workspace:*",
+    "@litho/capability": "workspace:*",
+    "@litho/security": "workspace:*",
     "express": "^4.19.2"
   },
   "devDependencies": {

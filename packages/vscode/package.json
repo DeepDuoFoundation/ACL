@@ -9,7 +9,9 @@
   },
   "dependencies": {
     "@litho/core": "workspace:*",
-    "@litho/shared": "workspace:*"
+    "@litho/shared": "workspace:*",
+    "@litho/capability": "workspace:*",
+    "@litho/security": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.5.0",
