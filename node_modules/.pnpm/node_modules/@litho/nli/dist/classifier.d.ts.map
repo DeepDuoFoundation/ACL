@@ -1,0 +1,1 @@
+{"version":3,"file":"classifier.d.ts","sourceRoot":"","sources":["../src/classifier.ts"],"names":[],"mappings":"AAAA,OAAO,KAAK,EAAE,MAAM,EAAQ,SAAS,EAAE,MAAM,YAAY,CAAC;AAa1D,qBAAa,gBAAgB;IAC3B,OAAO,CAAC,MAAM,CAAY;gBAEd,MAAM,EAAE,SAAS;IAIvB,QAAQ,CAAC,IAAI,EAAE,MAAM,GAAG,OAAO,CAAC,MAAM,CAAC;IAyB7C,OAAO,CAAC,iBAAiB;CAM1B"}

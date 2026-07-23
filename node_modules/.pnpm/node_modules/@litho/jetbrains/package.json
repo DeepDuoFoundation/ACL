@@ -1,0 +1,19 @@
+{
+  "name": "@litho/jetbrains",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dist/bridge.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/bridge.js"
+  },
+  "dependencies": {
+    "@litho/core": "workspace:*",
+    "@litho/shared": "workspace:*",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "@types/express": "^4.17.21"
+  }
+}

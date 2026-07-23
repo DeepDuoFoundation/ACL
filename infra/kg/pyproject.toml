@@ -1,0 +1,15 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "litho-kg"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/litho_kg"]
+
+[project.optional-dependencies]
+test = ["pytest>=8.0.0"]
