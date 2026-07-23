@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { PDKManager } from "../src/manager.js";
 import { TSMCN3E } from "../src/tsmc-n3e.js";
 import { SamsungSF3 } from "../src/samsung-sf3.js";
+import { GF22FDX } from "../src/gf-22fdx.js";
 
 describe("PDKManager", () => {
   it("should list available PDKs", () => {
@@ -88,5 +89,15 @@ describe("PDKManager", () => {
     expect(config.illumination.na).toBe(0.55);
     expect(config.layers.length).toBeGreaterThanOrEqual(4);
     expect(manager.listAvailable()).toContain("Intel 18A");
+  });
+
+  it("should load GF 22FDX PDK", () => {
+    const manager = new PDKManager();
+    const config = manager.loadPDK("GF 22FDX");
+    expect(config.node).toBe("22FDX");
+    expect(config.vendor).toBe("GlobalFoundries");
+    expect(config.illumination.wavelength).toBe(193);
+    expect(config.resist.type).toBe("ArF");
+    expect(manager.listAvailable()).toContain("GF 22FDX");
   });
 });
