@@ -1,1 +1,2 @@
 export type { ConversationTurn, ConversationSession, ClarificationQuestion, NLIv3Config, NLIv3Response } from "./types.js";
+export { ConversationManager } from "./conversation.js";
