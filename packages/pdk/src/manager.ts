@@ -3,6 +3,7 @@ import { TSMCN3E } from "./tsmc-n3e.js";
 import { SamsungSF3 } from "./samsung-sf3.js";
 import { Intel18A } from "./intel-18a.js";
 import { GF22FDX } from "./gf-22fdx.js";
+import { UMC22nm } from "./umc-22nm.js";
 
 export class PDKManager {
   private pdkConfigs = new Map<string, PDKConfig>();
@@ -13,6 +14,7 @@ export class PDKManager {
     this.registerPDK(SamsungSF3);
     this.registerPDK(Intel18A);
     this.registerPDK(GF22FDX);
+    this.registerPDK(UMC22nm);
   }
 
   registerPDK(config: PDKConfig): void {

@@ -100,4 +100,18 @@ describe("PDKManager", () => {
     expect(config.resist.type).toBe("ArF");
     expect(manager.listAvailable()).toContain("GF 22FDX");
   });
+
+  it("should load UMC 22nm PDK", () => {
+    const manager = new PDKManager();
+    const config = manager.loadPDK("UMC 22nm");
+    expect(config.node).toBe("22nm");
+    expect(config.vendor).toBe("UMC");
+    expect(config.illumination.wavelength).toBe(193);
+    expect(manager.listAvailable()).toContain("UMC 22nm");
+  });
+
+  it("should have all 5 PDKs registered", () => {
+    const manager = new PDKManager();
+    expect(manager.listAvailable()).toHaveLength(5);
+  });
 });
