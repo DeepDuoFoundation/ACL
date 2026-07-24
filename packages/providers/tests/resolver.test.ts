@@ -6,24 +6,29 @@ describe("Provider Catalog", () => {
     expect(Object.keys(PROVIDERS).length).toBe(39);
   });
 
-  it("should resolve anthropic provider", () => {
-    process.env.ANTHROPIC_API_KEY = "test-key";
-    const ep = resolveEndpoint("anthropic/claude-sonnet-4-20250514");
+  it("should resolve anthropic provider with pro key", async () => {
+    process.env.ANTHROPIC_API_KEY = "ddf-pro-xxxxxxxxxxxx";
+    const ep = await resolveEndpoint("anthropic/claude-sonnet-4-20250514");
     expect(ep.providerId).toBe("anthropic");
     expect(ep.compat).toBe("anthropic-oc");
     expect(ep.baseURL).toBe("https://api.anthropic.com/v1");
-    expect(ep.apiKey).toBe("test-key");
+    expect(ep.apiKey).toBe("ddf-pro-xxxxxxxxxxxx");
     expect(ep.model).toBe("claude-sonnet-4-20250514");
   });
 
-  it("should resolve local vllm with no key", () => {
-    const ep = resolveEndpoint("vllm");
+  it("should block non-DDF provider on free tier", async () => {
+    process.env.ANTHROPIC_API_KEY = "ddf-free-xxxxxxxxxxxx";
+    await expect(resolveEndpoint("anthropic/claude-sonnet-4-20250514")).rejects.toThrow("not available on the Free tier");
+  });
+
+  it("should resolve local vllm with no key", async () => {
+    const ep = await resolveEndpoint("vllm");
     expect(ep.baseURL).toBe("http://localhost:8000/v1");
     expect(ep.compat).toBe("openai");
   });
 
-  it("should throw on unknown provider", () => {
-    expect(() => resolveEndpoint("nonexistent")).toThrow("Unknown provider");
+  it("should throw on unknown provider", async () => {
+    await expect(() => resolveEndpoint("nonexistent")).rejects.toThrow("Unknown provider");
   });
 });
 

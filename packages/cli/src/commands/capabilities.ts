@@ -16,7 +16,7 @@ export async function capabilitiesCommand(options: { sync?: boolean; type?: stri
       if (cfg.apiKey) apiKey = cfg.apiKey;
     } catch {}
 
-    const gatewayUrl = process.env.DDF_GATEWAY_URL || "https://api.ddf.ai/v1";
+    const gatewayUrl = process.env.DDF_GATEWAY_URL || "https://aiback.ddfrl.com/v1";
     console.log(`Syncing capabilities from DDF AI Gateway (${gatewayUrl})...`);
 
     const result = await manager.syncFromRemoteGateway(gatewayUrl, apiKey, "agentic-lithography");

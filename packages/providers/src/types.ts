@@ -9,6 +9,7 @@ export interface ProviderDef {
   compat: CompatMode;
   discovery?: DiscoveryStrategy;
   category: "aggregator" | "cloud" | "api" | "local";
+  tier?: "all" | "pro";
 }
 
 export interface EndpointResult {

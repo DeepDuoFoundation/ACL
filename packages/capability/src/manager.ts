@@ -30,7 +30,7 @@ export class CapabilityManager extends EventEmitter {
   }
 
   async syncFromRemoteGateway(
-    gatewayUrl = "https://api.ddf.ai/v1",
+    gatewayUrl = "https://aiback.ddfrl.com/v1",
     apiKey?: string,
     product = "agentic-lithography"
   ): Promise<{ synced: number; error?: string }> {

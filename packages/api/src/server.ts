@@ -3,17 +3,21 @@ import type { APIResponse, RunOPCRequest, RCARequest } from "./types.js";
 import { AgentSwarm } from "@litho/core";
 import { PDKManager } from "@litho/pdk";
 import { CapabilityManager } from "@litho/capability";
-import { GatewayAuthClient } from "@litho/security";
+import { GatewayAuthClient, AuthGuard, TierManager, RateLimiter } from "@litho/security";
+import { checkProviderAccess } from "@litho/providers";
 
 export class LithoAPIServer {
   private pdkManager = new PDKManager();
   private swarm = new AgentSwarm();
   private capabilityManager = new CapabilityManager();
   private authClient = new GatewayAuthClient();
+  private authGuard = new AuthGuard();
+  private rateLimiter = new RateLimiter();
 
   async handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
     const method = req.method?.toUpperCase() || "GET";
+    const clientIp = req.headers["x-forwarded-for"] as string || req.socket.remoteAddress || "unknown";
 
     res.setHeader("Content-Type", "application/json");
 
@@ -23,7 +27,7 @@ export class LithoAPIServer {
         return;
       }
 
-      // Authentication verification endpoint
+      // Authentication verification endpoint (no auth required)
       if (method === "GET" && url.pathname === "/api/v1/auth/status") {
         const authHeader = req.headers["authorization"] || "";
         const token = authHeader.replace(/^Bearer\s+/i, "");
@@ -35,6 +39,45 @@ export class LithoAPIServer {
           timestamp: Date.now(),
         });
         return;
+      }
+
+      // Auth guard for all other API routes
+      const apiKey = req.headers["x-api-key"] as string || process.env.DDF_API_KEY || "";
+      if (!apiKey) {
+        this.sendJSON(res, 401, { success: false, error: "Authentication required. Provide DDF_API_KEY or x-api-key header.", timestamp: Date.now() });
+        return;
+      }
+
+      const tier = TierManager.detectTier(apiKey);
+
+      // Rate limiting
+      const rateCheck = this.rateLimiter.check(clientIp, tier);
+      if (!rateCheck.allowed) {
+        res.setHeader("Retry-After", String(rateCheck.retryAfter || 60));
+        this.sendJSON(res, 429, { success: false, error: `Rate limit exceeded. Retry after ${rateCheck.retryAfter}s`, timestamp: Date.now() });
+        return;
+      }
+
+      // Verify JWT token for non-health routes
+      const authHeader = req.headers["authorization"] || "";
+      const token = authHeader.replace(/^Bearer\s+/i, "");
+      if (token) {
+        const authResult = await this.authClient.verifyToken(token);
+        if (!authResult.valid && url.pathname !== "/api/v1/auth/status") {
+          this.sendJSON(res, 401, { success: false, error: authResult.error || "Invalid authentication token", timestamp: Date.now() });
+          return;
+        }
+      }
+
+      // Check provider access for provider-specific endpoints
+      const requestedProvider = url.searchParams.get("provider");
+      if (requestedProvider) {
+        try {
+          checkProviderAccess(requestedProvider, tier);
+        } catch (e) {
+          this.sendJSON(res, 403, { success: false, error: (e as Error).message, timestamp: Date.now() });
+          return;
+        }
       }
 
       // Capabilities listing endpoint
@@ -49,7 +92,7 @@ export class LithoAPIServer {
       if (method === "POST" && url.pathname === "/api/v1/capabilities/sync") {
         const authHeader = req.headers["authorization"] || "";
         const token = authHeader.replace(/^Bearer\s+/i, "");
-        const gatewayUrl = (req.headers["x-ddf-gateway"] as string) || process.env.DDF_GATEWAY_URL || "https://api.ddf.ai/v1";
+        const gatewayUrl = (req.headers["x-ddf-gateway"] as string) || process.env.DDF_GATEWAY_URL || "https://aiback.ddfrl.com/v1";
 
         const syncResult = await this.capabilityManager.syncFromRemoteGateway(gatewayUrl, token, "agentic-lithography");
         this.sendJSON(res, syncResult.error ? 400 : 200, {

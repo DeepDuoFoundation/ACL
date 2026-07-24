@@ -1,21 +1,64 @@
 {
-  "name": "@litho/vscode",
+  "name": "lithomind-ai",
+  "displayName": "Agentic Lithography (LithoMind AI)",
+  "description": "Sub-10nm Optical Proximity Correction (OPC), ILT, & Fab Digital Twin Assistant",
   "version": "0.1.0",
-  "type": "module",
+  "publisher": "deepduofoundation",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
   "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:lithomind.chatView"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "litho.login",
+        "title": "LithoMind: Authenticate Gateway API Key"
+      },
+      {
+        "command": "litho.run",
+        "title": "LithoMind: Run Sub-10nm OPC/ILT Job"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "lithomind",
+          "title": "LithoMind AI",
+          "icon": "media/logo.svg"
+        }
+      ]
+    },
+    "views": {
+      "lithomind": [
+        {
+          "type": "webview",
+          "id": "lithomind.chatView",
+          "name": "Agentic Lithography"
+        }
+      ]
+    }
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "npx esbuild src/extension.ts --bundle --platform=node --format=cjs --outfile=dist/extension.js --external:vscode",
     "test": "vitest run"
   },
   "dependencies": {
-    "@litho/core": "workspace:*",
-    "@litho/shared": "workspace:*",
     "@litho/capability": "workspace:*",
-    "@litho/security": "workspace:*"
+    "@litho/core": "workspace:*",
+    "@litho/security": "workspace:*",
+    "@litho/shared": "workspace:*"
   },
   "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "esbuild": "^0.28.1",
     "typescript": "^5.5.0",
-    "vitest": "^2.0.0",
-    "@types/vscode": "^1.85.0"
+    "vitest": "^2.0.0"
   }
 }

@@ -21,7 +21,8 @@
     "@litho/reporting": "workspace:*",
     "@litho/capability": "workspace:*",
     "@litho/security": "workspace:*",
-    "@litho/shared": "workspace:*"
+    "@litho/shared": "workspace:*",
+    "@litho/providers": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

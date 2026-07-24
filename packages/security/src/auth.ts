@@ -12,11 +12,11 @@ export interface AuthVerificationResult {
 }
 
 export class GatewayAuthClient {
-  constructor(private gatewayUrl: string = process.env.DDF_GATEWAY_URL || "https://api.ddf.ai/v1") {}
+  constructor(private gatewayUrl: string = process.env.DDF_GATEWAY_URL || "https://aiback.ddfrl.com/v1") {}
 
   async verifyToken(token: string, product = "agentic-lithography"): Promise<AuthVerificationResult> {
     try {
-      const resp = await fetch(`${this.gatewayUrl}/auth/verify`, {
+      const resp = await fetch(`${this.gatewayUrl}/auth/keys/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -48,7 +48,7 @@ export class GatewayAuthClient {
 
   async verifyApiKey(apiKey: string, product = "agentic-lithography"): Promise<AuthVerificationResult> {
     try {
-      const resp = await fetch(`${this.gatewayUrl}/keys/verify`, {
+      const resp = await fetch(`${this.gatewayUrl}/auth/keys/verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
