@@ -2,7 +2,7 @@ export const PROVIDERS = {
     // ── Aggregators / Gateways (7) ──
     "ddf-gateway": {
         id: "ddf-gateway", label: "DDF AI Gateway",
-        baseURL: "https://api.ddf.ai/v1", apiKeyEnv: "DDF_API_KEY",
+        baseURL: "https://aiback.ddfrl.com/v1", apiKeyEnv: "DDF_API_KEY",
         compat: "openai", category: "aggregator", tier: "all",
     },
     "kilocode": {

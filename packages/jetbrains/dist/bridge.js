@@ -53,7 +53,7 @@ export function createBridgeServer(port = 3847) {
         const { method } = req.body;
         if (method === "browser") {
             try {
-                const loginUrl = `https://app.ddf.ai/auth/login?product=agentic-lithography&jetbrains=true`;
+                const loginUrl = `https://ai.ddfrl.com/auth/login?product=agentic-lithography&jetbrains=true`;
                 res.json({ loginUrl });
             }
             catch (err) {
@@ -77,7 +77,7 @@ export function createBridgeServer(port = 3847) {
             return;
         }
         try {
-            const pollRes = await fetch(`https://api.ddf.ai/v1/auth/poll?state=${state}`);
+            const pollRes = await fetch(`https://aiback.ddfrl.com/v1/auth/poll?state=${state}`);
             const pollData = await pollRes.json();
             if (pollData.completed && pollData.apiKey) {
                 const result = await authFlow.validateApiKey(pollData.apiKey);
@@ -99,7 +99,7 @@ export function createBridgeServer(port = 3847) {
     app.post("/capabilities/sync", async (req, res) => {
         const { apiKey, gatewayUrl } = req.body;
         const token = apiKey || req.headers["authorization"]?.replace(/^Bearer\s+/i, "");
-        const url = gatewayUrl || process.env.DDF_GATEWAY_URL || "https://ai.ddfrl.com/v1";
+        const url = gatewayUrl || process.env.DDF_GATEWAY_URL || "https://aiback.ddfrl.com/v1";
         const result = await capabilityManager.syncFromRemoteGateway(url, token, "agentic-lithography");
         res.status(result.error ? 400 : 200).json(result);
     });
