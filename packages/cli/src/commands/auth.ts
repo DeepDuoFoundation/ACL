@@ -49,9 +49,21 @@ export async function authCommand(options: { key?: string; status?: boolean; log
   console.log("=======================================================");
   console.log("  1) 🔑 Use API Key");
   console.log("  2) 🔐 Sign In with Browser");
-  console.log("  3) ❌ Exit\n");
+  console.log("  3) 🚪 Logout");
+  console.log("  4) ❌ Exit\n");
 
-  const choice = await ask("  Choice [1/2/3]: ");
+  const choice = await ask("  Choice [1/2/3/4]: ");
+
+  if (choice === "4") {
+    console.log("  Exiting.");
+    return;
+  }
+
+  if (choice === "3") {
+    await authFlow.logout();
+    console.log("✓ Logged out successfully.");
+    return;
+  }
 
   if (choice === "1") {
     const key = await ask("  Enter your DDF API key: ");

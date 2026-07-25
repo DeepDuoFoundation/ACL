@@ -8,6 +8,7 @@ import { reportCommand } from "./commands/report.js";
 import { diffCommand } from "./commands/diff.js";
 import { authCommand } from "./commands/auth.js";
 import { capabilitiesCommand } from "./commands/capabilities.js";
+import { startTui } from "./tui/index.js";
 import * as readline from "node:readline";
 const program = new Command();
 program
@@ -98,10 +99,14 @@ async function ensureAuth() {
 }
 async function defaultAction() {
     const creds = await ensureAuth();
-    if (creds) {
-        console.log(`\n  \u001b[32m✓\u001b[0m Authenticated as \u001b[1m${creds.email || creds.name || creds.tier}\u001b[0m (\u001b[33m${creds.tier}\u001b[0m)`);
-    }
-    program.outputHelp();
+    if (!creds)
+        return;
+    await startTui({
+        apiKey: creds.apiKey || "",
+        email: creds.email,
+        tier: creds.tier,
+        product: "LithoMind",
+    });
 }
 const args = process.argv.slice(2);
 if (args.length === 0) {

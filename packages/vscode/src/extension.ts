@@ -6,7 +6,10 @@ class LithoChatViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = "lithomind.chatView";
   private _view?: vscode.WebviewView;
 
-  constructor(private readonly _extensionUri: vscode.Uri) {}
+  constructor(
+    private readonly _extensionUri: vscode.Uri,
+    private readonly authFlow: AuthFlow
+  ) {}
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -26,12 +29,13 @@ class LithoChatViewProvider implements vscode.WebviewViewProvider {
         this.updateAuthStatus();
       } else if (msg.type === "validateApiKey" || msg.type === "verifyAuthCode") {
         const key = (msg.key || msg.code || "").trim();
-        if (key.length >= 6) {
+        const result = await this.authFlow.validateApiKey(key);
+        if (result.valid) {
           await vscode.workspace.getConfiguration("litho").update("apiKey", key, vscode.ConfigurationTarget.Global);
           vscode.window.showInformationMessage("✓ LithoMind AI Authenticated successfully!");
-          this.updateAuthStatus(true, "asfak@ddfrl.com");
+          this.updateAuthStatus(true, result.email);
         } else {
-          vscode.window.showErrorMessage("Invalid API Key or 6-digit Auth Code");
+          vscode.window.showErrorMessage(result.error || "Invalid API Key or 6-digit Auth Code");
         }
       } else if (msg.type === "openWebLogin") {
         const state = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
@@ -62,6 +66,7 @@ class LithoChatViewProvider implements vscode.WebviewViewProvider {
         })();
 
       } else if (msg.type === "logout") {
+        await this.authFlow.logout();
         await vscode.workspace.getConfiguration("litho").update("apiKey", "", vscode.ConfigurationTarget.Global);
         vscode.window.showInformationMessage("Logged out from LithoMind AI.");
         this.updateAuthStatus(false);
@@ -93,7 +98,7 @@ class LithoChatViewProvider implements vscode.WebviewViewProvider {
     this._view?.webview.postMessage({
       type: "authStatus",
       authenticated: isAuthed,
-      user: { email: email || "asfak@ddfrl.com" }
+      user: { email: email || (isAuthed ? "user@ddfrl.com" : undefined) }
     });
   }
 
@@ -386,9 +391,10 @@ class LithoChatViewProvider implements vscode.WebviewViewProvider {
 
 export async function activate(context: vscode.ExtensionContext) {
   const authFlow = new AuthFlow();
-  const creds = await authFlow.checkSession();
+  const currentKey = vscode.workspace.getConfiguration("litho").get<string>("apiKey") || process.env.DDF_API_KEY;
+  const creds = await authFlow.checkSession(currentKey);
 
-  const provider = new LithoChatViewProvider(context.extensionUri);
+  const provider = new LithoChatViewProvider(context.extensionUri, authFlow);
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(LithoChatViewProvider.viewType, provider)

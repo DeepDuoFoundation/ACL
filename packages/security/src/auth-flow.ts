@@ -30,11 +30,17 @@ export class AuthFlow {
     this.authFile = path.join(this.configDir, "auth.json");
   }
 
-  async checkSession(): Promise<AuthCredentials | null> {
+  async checkSession(currentKey?: string): Promise<AuthCredentials | null> {
     try {
       if (fs.existsSync(this.authFile)) {
         const raw = fs.readFileSync(this.authFile, "utf-8");
         const creds: AuthCredentials = JSON.parse(raw);
+        const keyChanged = currentKey !== undefined && currentKey !== creds.apiKey;
+        if (keyChanged) {
+          const result = await this.validateApiKey(currentKey);
+          if (result.valid) return result as any;
+          return null;
+        }
         const thirtyDays = 30 * 24 * 60 * 60 * 1000;
         if (Date.now() - creds.lastVerified < thirtyDays) return creds;
         const result = await this.validateApiKey(creds.apiKey);
@@ -64,41 +70,17 @@ export class AuthFlow {
       if (data.valid) {
         const creds: AuthCredentials = {
           apiKey,
-          tier: data.tier || "pro",
-          email: data.user?.email || data.email || "asfak@ddfrl.com",
-          name: data.user?.name || data.name || "Asfak",
+          tier: data.tier || "free",
+          email: data.user?.email || data.email,
+          name: data.user?.name || data.name,
           lastVerified: Date.now(),
-          limits: data.limits || { maxRequestsPerMin: 100, maxTokensPerDay: 500000 },
-        };
-        await this.saveCredentials(creds);
-        return { valid: true, tier: creds.tier, email: creds.email, name: creds.name, limits: creds.limits };
-      }
-      if (apiKey && (apiKey.startsWith("ddf_") || apiKey.startsWith("ddf-") || apiKey.length >= 6)) {
-        const creds: AuthCredentials = {
-          apiKey,
-          tier: "pro",
-          email: "asfak@ddfrl.com",
-          name: "Asfak",
-          lastVerified: Date.now(),
-          limits: { maxRequestsPerMin: 100, maxTokensPerDay: 500000 },
+          limits: data.limits || { maxRequestsPerMin: 10, maxTokensPerDay: 100000 },
         };
         await this.saveCredentials(creds);
         return { valid: true, tier: creds.tier, email: creds.email, name: creds.name, limits: creds.limits };
       }
       return { valid: false, error: data.error || "Invalid API key" };
     } catch (err: any) {
-      if (apiKey && (apiKey.startsWith("ddf_") || apiKey.startsWith("ddf-") || apiKey.length >= 6)) {
-        const creds: AuthCredentials = {
-          apiKey,
-          tier: "pro",
-          email: "asfak@ddfrl.com",
-          name: "Asfak",
-          lastVerified: Date.now(),
-          limits: { maxRequestsPerMin: 100, maxTokensPerDay: 500000 },
-        };
-        await this.saveCredentials(creds);
-        return { valid: true, tier: creds.tier, email: creds.email, name: creds.name, limits: creds.limits };
-      }
       return { valid: false, error: err.message || "Validation failed" };
     }
   }
@@ -133,7 +115,22 @@ export class AuthFlow {
   }
 
   async logout(): Promise<void> {
-    try { if (fs.existsSync(this.authFile)) fs.unlinkSync(this.authFile); } catch {}
+    try {
+      if (fs.existsSync(this.authFile)) {
+        const raw = fs.readFileSync(this.authFile, "utf-8");
+        const creds: AuthCredentials = JSON.parse(raw);
+        fetch("https://aiback.ddfrl.com/v1/auth/logout", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${creds.apiKey}`,
+            "X-DDF-Product": "agentic-lithography",
+          },
+          body: JSON.stringify({ apiKey: creds.apiKey }),
+        }).catch(() => {});
+      }
+      fs.unlinkSync(this.authFile);
+    } catch {}
     try { const p = path.join(this.configDir, "auth-pending.json"); if (fs.existsSync(p)) fs.unlinkSync(p); } catch {}
   }
 

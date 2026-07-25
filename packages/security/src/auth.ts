@@ -30,18 +30,14 @@ export class GatewayAuthClient {
       }
 
       const data = (await resp.json()) as any;
+      if (data.valid === false) {
+        return { valid: false, error: "Invalid token" };
+      }
       return {
         valid: true,
         user: data.user || { id: data.userId || "usr_gateway", email: data.email || "user@ddf.ai" },
       };
     } catch (err) {
-      // In offline / local development mode, validate format
-      if (token && token.length > 8) {
-        return {
-          valid: true,
-          user: { id: "usr_dev", email: "dev@lithomind.ai", name: "LithoMind Developer" },
-        };
-      }
       return { valid: false, error: (err as Error).message };
     }
   }
@@ -63,11 +59,11 @@ export class GatewayAuthClient {
       }
 
       const data = (await resp.json()) as any;
+      if (data.valid === false) {
+        return { valid: false, error: "Invalid API key" };
+      }
       return { valid: true, user: data.user };
     } catch (err) {
-      if (apiKey && apiKey.startsWith("ddf_")) {
-        return { valid: true, user: { id: "usr_dev_key", email: "dev@lithomind.ai" } };
-      }
       return { valid: false, error: (err as Error).message };
     }
   }

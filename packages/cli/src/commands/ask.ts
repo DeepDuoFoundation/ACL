@@ -1,13 +1,16 @@
-import { Runtime } from "@litho/core";
-import { CliHostAdapter } from "../cli-host-adapter.js";
+import { NLIV3Engine } from "@litho/nli-v3";
+
+const nli = new NLIV3Engine();
+const sessionId = `ask_${Date.now()}`;
 
 export async function askCommand(query: string) {
-  const host = new CliHostAdapter();
-  const runtime = new Runtime(host);
-  await runtime.initialize();
-
-  console.log(`Query: ${query}`);
-  // In production: route through NLI intent classifier
-  console.log("Processing query via NLI...");
-  console.log("Response: [agent response will appear here]");
+  const response = await nli.processMessage(sessionId, "cli-user", query);
+  if (response.needsClarification && response.clarificationQuestions.length > 0) {
+    console.log(`\n${response.message}\n`);
+    for (const q of response.clarificationQuestions) {
+      console.log(`  ? ${q.question}`);
+    }
+    console.log("");
+  }
+  console.log(response.message);
 }
