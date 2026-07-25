@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { Text, Box, useInput } from "ink"
-import { SlashPopup, SLASH_COMMANDS } from "./SlashPopup.js"
+import { SlashPopup, SLASH_COMMANDS, AVAILABLE_MODELS, AVAILABLE_AGENTS, AVAILABLE_CAPABILITIES } from "./SlashPopup.js"
 
 interface CommandInputProps {
   onSend: (text: string) => void
@@ -20,10 +20,22 @@ export function CommandInput({
   const [showPopup, setShowPopup] = useState(false)
 
   const isSlashCommand = value.startsWith("/") || showPopup
-  const query = value.startsWith("/") ? value.slice(1).toLowerCase() : value.toLowerCase()
-  const filteredCommands = SLASH_COMMANDS.filter(
-    (item) => item.cmd.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query),
-  )
+  const cleanInput = value.trim().toLowerCase()
+  const isModelsSubmenu = cleanInput === "/models" || cleanInput.startsWith("/models ")
+  const isAgentsSubmenu = cleanInput === "/agents" || cleanInput.startsWith("/agents ")
+  const isCapabilitiesSubmenu = cleanInput === "/capabilities" || cleanInput.startsWith("/capabilities ")
+
+  let currentListLength = SLASH_COMMANDS.length
+  if (isModelsSubmenu) currentListLength = AVAILABLE_MODELS.length
+  else if (isAgentsSubmenu) currentListLength = AVAILABLE_AGENTS.length
+  else if (isCapabilitiesSubmenu) currentListLength = AVAILABLE_CAPABILITIES.length
+  else {
+    const query = value.startsWith("/") ? value.slice(1).toLowerCase() : value.toLowerCase()
+    const filtered = SLASH_COMMANDS.filter(
+      (item) => item.cmd.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query),
+    )
+    currentListLength = filtered.length
+  }
 
   useInput((input, key) => {
     if (disabled) return
@@ -35,20 +47,32 @@ export function CommandInput({
       return
     }
 
-    if (isSlashCommand && filteredCommands.length > 0) {
+    if (isSlashCommand && currentListLength > 0) {
       if (key.upArrow) {
-        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : filteredCommands.length - 1))
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : currentListLength - 1))
         return
       }
       if (key.downArrow) {
-        setSelectedIndex((prev) => (prev < filteredCommands.length - 1 ? prev + 1 : 0))
+        setSelectedIndex((prev) => (prev < currentListLength - 1 ? prev + 1 : 0))
         return
       }
       if (key.tab) {
-        const selectedCmd = filteredCommands[selectedIndex] || filteredCommands[0]
-        if (selectedCmd) {
-          setValue(selectedCmd.cmd + " ")
-          setShowPopup(false)
+        if (isModelsSubmenu) {
+          const selected = AVAILABLE_MODELS[Math.min(selectedIndex, AVAILABLE_MODELS.length - 1)]
+          if (selected) onSend(`/select_model ${selected.name}`)
+        } else if (isAgentsSubmenu) {
+          const selected = AVAILABLE_AGENTS[Math.min(selectedIndex, AVAILABLE_AGENTS.length - 1)]
+          if (selected) onSend(`/select_agent ${selected.name}`)
+        } else if (!isCapabilitiesSubmenu) {
+          const query = value.startsWith("/") ? value.slice(1).toLowerCase() : value.toLowerCase()
+          const filtered = SLASH_COMMANDS.filter(
+            (item) => item.cmd.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query),
+          )
+          const selectedCmd = filtered[selectedIndex] || filtered[0]
+          if (selectedCmd) {
+            setValue(selectedCmd.cmd + " ")
+            setShowPopup(false)
+          }
         }
         return
       }
@@ -57,8 +81,28 @@ export function CommandInput({
     if (key.return) {
       const trimmed = value.trim()
       if (trimmed) {
-        if (isSlashCommand && filteredCommands.length > 0 && showPopup) {
-          const selectedCmd = filteredCommands[Math.min(selectedIndex, filteredCommands.length - 1)]
+        if (isModelsSubmenu) {
+          const selected = AVAILABLE_MODELS[Math.min(selectedIndex, AVAILABLE_MODELS.length - 1)]
+          if (selected) onSend(`/select_model ${selected.name}`)
+          setValue("")
+          setShowPopup(false)
+          setSelectedIndex(0)
+          return
+        }
+        if (isAgentsSubmenu) {
+          const selected = AVAILABLE_AGENTS[Math.min(selectedIndex, AVAILABLE_AGENTS.length - 1)]
+          if (selected) onSend(`/select_agent ${selected.name}`)
+          setValue("")
+          setShowPopup(false)
+          setSelectedIndex(0)
+          return
+        }
+        if (isSlashCommand && showPopup) {
+          const query = value.startsWith("/") ? value.slice(1).toLowerCase() : value.toLowerCase()
+          const filtered = SLASH_COMMANDS.filter(
+            (item) => item.cmd.toLowerCase().includes(query) || item.desc.toLowerCase().includes(query),
+          )
+          const selectedCmd = filtered[Math.min(selectedIndex, filtered.length - 1)]
           onSend(selectedCmd ? selectedCmd.cmd : trimmed)
         } else {
           onSend(trimmed)

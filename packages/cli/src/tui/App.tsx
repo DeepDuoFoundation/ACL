@@ -25,9 +25,6 @@ const nli = new NLIV3Engine()
 const sessionId = `cli_${Date.now()}`
 const authFlow = new AuthFlow()
 
-const MODELS = ["Anthropic Claude 3.5 Sonnet", "DeepSeek V4 Flash Free", "OpenAI GPT-4o Enterprise", "LithoMind Fine-tuned 7B"]
-const AGENTS = ["Build (Full Agentic)", "Plan (Architect)", "Ask (Q&A)", "OPC/ILT Mask Synthesizer"]
-
 export function App({ apiKey, email = "asfak@ddfrl.com", tier = "pro", product = "LithoMind AI" }: AppProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -38,8 +35,8 @@ export function App({ apiKey, email = "asfak@ddfrl.com", tier = "pro", product =
     },
   ])
   const [processing, setProcessing] = useState(false)
-  const [modelIndex, setModelIndex] = useState(0)
-  const [agentIndex, setAgentIndex] = useState(0)
+  const [currentModel, setCurrentModel] = useState("Anthropic Claude 3.5 Sonnet")
+  const [currentAgent, setCurrentAgent] = useState("Build (Full Agentic)")
   const { exit } = useApp()
 
   const handleSend = useCallback(
@@ -56,6 +53,38 @@ export function App({ apiKey, email = "asfak@ddfrl.com", tier = "pro", product =
       try {
         const lower = text.toLowerCase().trim()
 
+        if (text.startsWith("/select_model ")) {
+          const modelName = text.replace("/select_model ", "").trim()
+          setCurrentModel(modelName)
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: nextId(),
+              role: "assistant",
+              content: `🧠 Active foundation model switched to: **${modelName}**`,
+              timestamp: Date.now(),
+            },
+          ])
+          setProcessing(false)
+          return
+        }
+
+        if (text.startsWith("/select_agent ")) {
+          const agentName = text.replace("/select_agent ", "").trim()
+          setCurrentAgent(agentName)
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: nextId(),
+              role: "assistant",
+              content: `🔄 Autonomous agent mode switched to: **${agentName}**`,
+              timestamp: Date.now(),
+            },
+          ])
+          setProcessing(false)
+          return
+        }
+
         if (lower === "exit" || lower === "/exit" || lower === "quit") {
           setProcessing(false)
           exit()
@@ -69,14 +98,18 @@ export function App({ apiKey, email = "asfak@ddfrl.com", tier = "pro", product =
         }
 
         if (lower === "/agents") {
-          const nextAgent = (agentIndex + 1) % AGENTS.length
-          setAgentIndex(nextAgent)
           setMessages((prev) => [
             ...prev,
             {
               id: nextId(),
               role: "assistant",
-              content: `🔄 Switched agent mode to: **${AGENTS[nextAgent]}**`,
+              content: `💡 Select an agent mode from the popup using Arrow keys & Enter.
+Available Agent Modes:
+  1. Build (Full Agentic) — Autonomous OPC & curvilinear ILT mask synthesis
+  2. Plan (Architect) — Process window & yield planning
+  3. Ask (Q&A) — OPC, EPE & scanner assistant
+  4. Curvilinear ILT Synthesizer — Inverse Maxwell solver
+  5. EPE Hotspot Verifier — Automated scanner audit`,
               timestamp: Date.now(),
             },
           ])
@@ -85,14 +118,17 @@ export function App({ apiKey, email = "asfak@ddfrl.com", tier = "pro", product =
         }
 
         if (lower === "/models") {
-          const nextModel = (modelIndex + 1) % MODELS.length
-          setModelIndex(nextModel)
           setMessages((prev) => [
             ...prev,
             {
               id: nextId(),
               role: "assistant",
-              content: `🧠 Switched active model to: **${MODELS[nextModel]}**`,
+              content: `💡 Select a foundation model from the popup using Arrow keys & Enter.
+Available Models:
+  1. Anthropic Claude 3.5 Sonnet (Default)
+  2. DeepSeek V4 Flash Free
+  3. OpenAI GPT-4o Enterprise
+  4. LithoMind Fine-tuned 7B`,
               timestamp: Date.now(),
             },
           ])
@@ -125,11 +161,12 @@ export function App({ apiKey, email = "asfak@ddfrl.com", tier = "pro", product =
             {
               id: nextId(),
               role: "assistant",
-              content: `✓ Synced ${syncRes.synced || 4} LithoMind Capabilities & Fab PDK Connectors:
-  • Sub-10nm OPC Rule/Neural Engine (Active)
-  • Inverse Lithography Technology (ILT) Synthesizer (Active)
-  • Fab Digital Twin Real-Time Scanner Telemetry (Active)
-  • Edge Placement Error (EPE) Verifier (Active)`,
+              content: `✓ Synced ${syncRes.synced || 5} LithoMind Capabilities & Fab PDK Connectors:
+  • Sub-10nm OPC Neural Engine [Active]
+  • Inverse Lithography (ILT) Synthesizer [Active]
+  • Fab Digital Twin Telemetry Scanner [Active]
+  • Edge Placement Error (EPE) Verifier [Active]
+  • DDF AI Gateway Multi-Model Router [Active]`,
               timestamp: Date.now(),
             },
           ])
@@ -212,10 +249,10 @@ export function App({ apiKey, email = "asfak@ddfrl.com", tier = "pro", product =
               id: nextId(),
               role: "assistant",
               content: `Available Commands:
-  • /agents      - Switch autonomous agent execution mode
+  • /agents      - Select & switch OPC/ILT agent mode (Build, Plan, Ask, ILT, EPE)
+  • /models      - Select & switch foundation model (Claude 3.5, DeepSeek V4, GPT-4o)
+  • /capabilities- View & sync LithoMind PDKs, Skills, MCPs, and Fab Connectors
   • /connect     - Connect DDF AI Gateway provider or check status
-  • /models      - Switch active foundation model
-  • /capabilities- Sync LithoMind MCPs, PDKs, and Fab Skills
   • /debug       - View diagnostic trace & gateway telemetry
   • /diff        - View job diffs & layout comparison
   • /history     - View session history & OPC run logs
@@ -250,7 +287,7 @@ export function App({ apiKey, email = "asfak@ddfrl.com", tier = "pro", product =
       }
       setProcessing(false)
     },
-    [exit, agentIndex, modelIndex, email, tier],
+    [exit, email, tier],
   )
 
   return (
@@ -262,8 +299,8 @@ export function App({ apiKey, email = "asfak@ddfrl.com", tier = "pro", product =
       <CommandInput
         onSend={handleSend}
         disabled={processing}
-        modelName={MODELS[modelIndex]}
-        activeMode={AGENTS[agentIndex]}
+        modelName={currentModel}
+        activeMode={currentAgent}
       />
       <StatusBar email={email} tier={tier} product={product} />
     </Box>
