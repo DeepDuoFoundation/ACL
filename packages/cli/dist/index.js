@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import { Command } from "commander";
-import { AuthFlow } from "@litho/security";
+import { AuthFlow, GatewayClient, CapabilityManager } from "@ddf/shared";
+const gatewayClient = new GatewayClient({ product: 'agentic-lithography' });
+const capabilityManager = new CapabilityManager({ gatewayClient });
 import { runCommand } from "./commands/run.js";
 import { askCommand } from "./commands/ask.js";
 import { twinCommand } from "./commands/twin.js";

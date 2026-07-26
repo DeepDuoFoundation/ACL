@@ -9,6 +9,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@ddf/shared": "file:../../../DDFAI/packages/shared",
     "@litho/core": "workspace:*",
     "@litho/shared": "workspace:*",
     "@litho/rag": "workspace:*",

@@ -11,6 +11,11 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "outDir": "dist",
-    "rootDir": "src"
+    "rootDir": "src",
+    "baseUrl": ".",
+    "paths": {
+      "@ddf/shared": ["../../DDFAI/packages/shared/dist/index.d.ts"],
+      "@ddf/shared/*": ["../../DDFAI/packages/shared/dist/*"]
+    }
   }
 }
