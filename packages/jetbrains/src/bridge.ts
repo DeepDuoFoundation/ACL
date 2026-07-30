@@ -1,5 +1,7 @@
 import express, { type Express, type Request, type Response, type NextFunction } from "express";
-import { AuthFlow, TierManager } from "@litho/security";
+import { readFile, writeFile, readdir, access } from "node:fs/promises";
+import { AuthFlow, TierManager, GatewayAuthClient } from "@litho/security";
+import type { AuthContext } from "@litho/security";
 import { CapabilityManager } from "@litho/capability";
 
 const authFlow = new AuthFlow();
@@ -36,9 +38,7 @@ export function createBridgeServer(port: number = 3847): Express {
     res.json({
       authenticated: true,
       email: creds.email,
-      name: creds.name,
       tier: creds.tier,
-      limits: creds.limits,
     });
   });
 
@@ -86,14 +86,55 @@ export function createBridgeServer(port: number = 3847): Express {
     try {
       const pollRes = await fetch(`https://aiback.ddfrl.com/v1/auth/poll?state=${state}`);
       const pollData = await pollRes.json();
-      if (pollData.completed && pollData.apiKey) {
+      if (pollData.status === "approved" && pollData.apiKey) {
         const result = await authFlow.validateApiKey(pollData.apiKey);
         res.json({ completed: true, ...result });
+      } else if (pollData.status === "denied" || pollData.status === "expired") {
+        res.json({ completed: false, error: pollData.status });
       } else {
         res.json({ completed: false });
       }
     } catch {
       res.json({ completed: false });
+    }
+  });
+
+  app.post("/auth/device-code", async (req, res) => {
+    const { apiKey } = req.body;
+    if (!apiKey) {
+      res.status(400).json({ error: "apiKey required to generate device code" });
+      return;
+    }
+    const result = await authFlow.validateApiKey(apiKey);
+    if (!result.valid || !result.profile) {
+      res.status(401).json({ error: result.error || "Invalid API key" });
+      return;
+    }
+    const gw = new GatewayAuthClient();
+    const profile = result.profile as AuthContext;
+    const deviceCode = await gw.generateDeviceCode(
+      profile.userId || "unknown",
+      profile.email || "unknown",
+      profile.tier || "free",
+      (profile.scopes || []) as any,
+      profile.allowedProviders || []
+    );
+    res.json({ deviceCode: deviceCode.code, state: deviceCode.state, expiresIn: 600 });
+  });
+
+  app.post("/auth/verify-code", async (req, res) => {
+    const { code, state } = req.body;
+    if (!code || !state) {
+      res.status(400).json({ error: "code and state required" });
+      return;
+    }
+    const gw = new GatewayAuthClient();
+    const result = await gw.verifyDeviceCode(code, state);
+    if (result.valid) {
+      const sessionResult = await authFlow.validateApiKey(result.profile?.key || code);
+      res.json(sessionResult);
+    } else {
+      res.status(401).json({ error: result.error || "Invalid code" });
     }
   });
 
@@ -119,6 +160,97 @@ export function createBridgeServer(port: number = 3847): Express {
   app.post("/run", async (req, res) => {
     const { layout, pdk } = req.body;
     res.json({ jobId: "pending", layout, pdk });
+  });
+
+  // Filesystem endpoints for JetBrainsHostAdapter
+  app.post("/fs/read", async (req: Request, res: Response) => {
+    try {
+      const { path } = req.body;
+      const content = await readFile(path, "utf-8");
+      res.json({ content });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/fs/write", async (req: Request, res: Response) => {
+    try {
+      const { path, content } = req.body;
+      await writeFile(path, content, "utf-8");
+      res.json({ success: true });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/fs/list", async (req: Request, res: Response) => {
+    try {
+      const { path } = req.body;
+      const entries = await readdir(path, { withFileTypes: true });
+      const files = entries.map((e) => (e.isDirectory() ? `${e.name}/` : e.name));
+      res.json({ files });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
+  app.post("/fs/exists", async (req: Request, res: Response) => {
+    try {
+      const { path } = req.body;
+      await access(path);
+      res.json({ exists: true });
+    } catch {
+      res.json({ exists: false });
+    }
+  });
+
+  // UI endpoints for JetBrainsHostAdapter
+  app.post("/ui/prompt", async (req: Request, res: Response) => {
+    const { message } = req.body;
+    res.json({ answer: message });
+  });
+
+  app.post("/ui/notify", async (req: Request, res: Response) => {
+    const { message, level } = req.body;
+    console.log(`[${level.toUpperCase()}] ${message}`);
+    res.json({ success: true });
+  });
+
+  const progressSessions = new Map<string, { message: string; total: number; current: number }>();
+
+  app.post("/ui/progress/start", async (req: Request, res: Response) => {
+    const { message, total } = req.body;
+    const progressId = `progress_${Date.now()}`;
+    progressSessions.set(progressId, { message, total, current: 0 });
+    res.json({ progressId });
+  });
+
+  app.post("/ui/progress/update", async (req: Request, res: Response) => {
+    const { progressId, current, total } = req.body;
+    const session = progressSessions.get(progressId);
+    if (session) {
+      session.current = current;
+      session.total = total;
+    }
+    res.json({ success: true });
+  });
+
+  app.post("/ui/progress/done", async (req: Request, res: Response) => {
+    const { progressId } = req.body;
+    progressSessions.delete(progressId);
+    res.json({ success: true });
+  });
+
+  app.post("/ui/open-url", async (req: Request, res: Response) => {
+    const { url } = req.body;
+    console.log(`Opening: ${url}`);
+    res.json({ success: true });
+  });
+
+  app.post("/output/stream", async (req: Request, res: Response) => {
+    const chunk = req.body;
+    console.log(`[LithoMind] ${chunk?.output?.summary ?? JSON.stringify(chunk)}`);
+    res.json({ success: true });
   });
 
   app.listen(port, () => {
